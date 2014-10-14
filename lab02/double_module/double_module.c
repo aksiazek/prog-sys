@@ -107,10 +107,8 @@ ssize_t double_write(struct file *filp, const char *user_buf, size_t count, loff
     int err;
     if (max > (mybuf_size - mybuf_count))
 		max = mybuf_size - mybuf_count;
-	// already written
+	
 	printk(KERN_INFO "mybuf_count value: %d\n", (int) mybuf_count);
-	printk(KERN_INFO "max value: %d\n", (int) max);
-	printk(KERN_INFO "mybuf_size value: %d\n", (int) mybuf_size);
 	
 	if(max > 0) {
 		err = copy_from_user(&mybuf[mybuf_count], user_buf, max);
@@ -118,7 +116,6 @@ ssize_t double_write(struct file *filp, const char *user_buf, size_t count, loff
 			printk(KERN_WARNING "double: error occured in double_write: %d", err);
 		}	
 		mybuf_count+=max;
-		//mybuf[mybuf_count] = 0;
 		
 		write_count++;
 		return max;
@@ -129,34 +126,6 @@ ssize_t double_write(struct file *filp, const char *user_buf, size_t count, loff
 
 bool copied = false;
 
-ssize_t double_read_proc(struct file *filp, char *user_buf, size_t count, loff_t *f_pos) {
-	char *buf;
-	int length;
-	int err;
-
-	buf = kmalloc(1000, GFP_KERNEL);
-	if (!buf) goto out;
-
-	if (!copied) {
-		length = snprintf(buf, 1000, text, read_count, write_count);
-		if (count >= length) {
-			count = length;
-		}
-
-		err = copy_to_user(user_buf, buf, count);
-		if (err) {
-	    	printk(KERN_WARNING "double: error occured in double_read_proc: %d\n", err);
-			goto out;
-		}
-		copied = true;
-	} else {
-    	count = 0;
-		copied = false;
-	}
-
-out:
-	if (buf) {
-		kfree(buf);
-	}
-	return count;
+ssize_t double_read_proc(struct file* filp, char* user_buf, size_t count, loff_t* f_pos) {
+	return double_read(filp, user_buf, count, f_pos);
 }
