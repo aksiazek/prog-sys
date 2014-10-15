@@ -1,9 +1,9 @@
-#include "double_module.h"
+#include "simple_module.h"
 
 #define mybuf_size 100
-#define double_major 200
+#define simple_major 199
 
-const char *text = "double. Read calls: %d, Write calls: %d\n";
+const char *text = "simple. Read calls: %d, Write calls: %d\n";
 
 int read_count = 0;
 int write_count = 0;
@@ -13,34 +13,34 @@ int mybuf_count = 0;
 
 struct proc_dir_entry *proc_entry = 0;
 
-int __init double_init(void) {
+int __init simple_init(void) {
     int result;
 
     /* Register an entry in /proc */
-    proc_entry = proc_create("double", 0, NULL, &proc_fops);
+    proc_entry = proc_create("simple", 0, NULL, &proc_fops);
 
     /* Register a device with the given major number */
-    result = register_chrdev(double_major, "double", &double_fops);
+    result = register_chrdev(simple_major, "simple", &simple_fops);
     if (result < 0) {
-        printk(KERN_WARNING "Cannot register the /dev/double device with major number: %d\n", double_major);
+        printk(KERN_WARNING "Cannot register the /dev/simple device with major number: %d\n", simple_major);
         return result;
     }
 
     mybuf = kmalloc(mybuf_size, GFP_KERNEL);
     if (!mybuf) {
         result = -ENOMEM;
-        double_exit();
+        simple_exit();
         return result;
     } else {
         memset(mybuf, 0, 1); // not important
-        printk(KERN_INFO "The double module has been inserted.\n");
+        printk(KERN_INFO "The simple module has been inserted.\n");
         return 0;
     }
 }
 
-void double_exit(void) {
+void simple_exit(void) {
     /* Unregister the device and /proc entry */
-    unregister_chrdev(double_major, "double");
+    unregister_chrdev(simple_major, "simple");
 	if (proc_entry) {
 		proc_remove(proc_entry);
 	}
@@ -50,20 +50,20 @@ void double_exit(void) {
         kfree(mybuf);
     }
 
-    printk(KERN_INFO "The double module has been removed\n");
+    printk(KERN_INFO "The simple module has been removed\n");
 }
 
-int double_open(struct inode *inode, struct file *filp) {
+int simple_open(struct inode *inode, struct file *filp) {
 	try_module_get(THIS_MODULE);
     return 0;
 }
 
-int double_release(struct inode *inode, struct file *filp) {
+int simple_release(struct inode *inode, struct file *filp) {
 	module_put(THIS_MODULE);
     return 0;
 }
 
-ssize_t double_read(struct file *filp, char *user_buf, size_t length, loff_t *f_pos) {
+ssize_t simple_read(struct file *filp, char *user_buf, size_t length, loff_t *f_pos) {
     /* Move one byte to the userspace */
     // copy_to_user(void *to, void* from, int size)
 
@@ -89,7 +89,7 @@ ssize_t double_read(struct file *filp, char *user_buf, size_t length, loff_t *f_
 	
 	err = copy_to_user(user_buf, mybuf, max);
 	if (err) {
-		printk(KERN_WARNING "double: error occured in double_read: %d", err);
+		printk(KERN_WARNING "simple: error occured in simple_read: %d", err);
 	}	
 	(*f_pos)+=max;
 
@@ -99,7 +99,7 @@ ssize_t double_read(struct file *filp, char *user_buf, size_t length, loff_t *f_
 	return max;
 }
 
-ssize_t double_write(struct file *filp, const char *user_buf, size_t count, loff_t *f_pos) {
+ssize_t simple_write(struct file *filp, const char *user_buf, size_t count, loff_t *f_pos) {
     // copy_from_user(to, from, size)
     // appending
    
@@ -113,7 +113,7 @@ ssize_t double_write(struct file *filp, const char *user_buf, size_t count, loff
 	if(max > 0) {
 		err = copy_from_user(&mybuf[mybuf_count], user_buf, max);
 		if (err) {
-			printk(KERN_WARNING "double: error occured in double_write: %d", err);
+			printk(KERN_WARNING "simple: error occured in simple_write: %d", err);
 		}	
 		mybuf_count+=max;
 		
@@ -124,8 +124,6 @@ ssize_t double_write(struct file *filp, const char *user_buf, size_t count, loff
     return -ENOSPC;
 }
 
-bool copied = false;
-
-ssize_t double_read_proc(struct file* filp, char* user_buf, size_t count, loff_t* f_pos) {
-	return double_read(filp, user_buf, count, f_pos);
+ssize_t simple_read_proc(struct file* filp, char* user_buf, size_t count, loff_t* f_pos) {
+	return simple_read(filp, user_buf, count, f_pos);
 }

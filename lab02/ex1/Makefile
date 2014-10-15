@@ -1,1 +1,1 @@
-obj-m := double_module.o
+obj-m := simple_module.o
