@@ -23,7 +23,7 @@ unsigned long reader_count = 0;
 struct user_hash {
 	struct hlist_node hash;
 	unsigned int pid;
-	char* reader_name; // comm
+	const char* reader_name; // comm
 	unsigned long bytes_read;
 	bool finished;
 };
@@ -78,16 +78,33 @@ ssize_t all_bytes_read_proc(struct file *filp, char *user_buf, size_t count, lof
 }
 
 ssize_t all_readers_proc(struct file *filp, char *user_buf, size_t count, loff_t *f_pos) {
-	char *buf;
+	char *buf, *item;
 	int length, err;
+	struct user_hash *existing;
+	unsigned long long bkt;
 	
-	buf = kmalloc(100, GFP_KERNEL);
+	buf = kmalloc(10000, GFP_KERNEL);
+	item = kmalloc(200, GFP_KERNEL);
 	
 	if (!buf)
 		goto out;
 	
 	if (!eof) {
-		length = snprintf(buf, 100, "Currently reading: %lu\n", reader_count);
+		snprintf(buf, 10000, "Currently reading: %lu\n\n", reader_count);
+		strcat(buf, "PID:\t\tProcess:\tRead[B]:\tStatus:\n");
+		
+		hash_for_each(hashmap, bkt, existing, hash)
+		{
+			snprintf(item, 200, "%u\t\t%s\t\t%lu\t\t", 
+			existing->pid, existing->reader_name, existing->bytes_read);
+			strcat(buf, item);
+			if(existing->finished)
+				strcat(buf, "finished\n");
+			else
+				strcat(buf, "active\n");
+		}
+		length = strlen(buf);
+		
 		if (count >= length) {
 			count = length;
 		}
@@ -101,7 +118,6 @@ ssize_t all_readers_proc(struct file *filp, char *user_buf, size_t count, loff_t
 	} else {
 		count = 0;
 		eof = false;
-		
 	}
 	
 	out:
@@ -153,7 +169,7 @@ ssize_t random_read(struct file *file, char __user *buf, size_t nbytes, loff_t *
 	all_bytes += bytes_read;
 	existing->bytes_read += bytes_read;
 	
-	printk(KERN_INFO "bytes read: %lu %lu\n", (unsigned long) bytes_read, reader_count);
+	//printk(KERN_INFO "bytes read: %lu %lu\n", (unsigned long) bytes_read, reader_count);
 	
 	if(bytes_read < 1) {
 		reader_count--;
