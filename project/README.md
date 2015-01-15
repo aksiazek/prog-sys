@@ -2,7 +2,7 @@ An interface for accesing more statistics about the /dev/random device
 for Linux Kernel >= 2.6
 
 Improved /dev/random statistics module (stats_of_random)
-========
+===============
 
 The project includes a kernel module to gather additional 
 information about the device by substituting existing random device
@@ -23,3 +23,20 @@ if /dev/random is truly random.
 DISCLAIMER: the module uses the GPL code of the TPE Linux Kernel Module, available at:
 https://github.com/cormander/tpe-lkm to hijack running kernel functions (to change them).
 Please refer to it's documentation to see if this works for you.
+
+
+===============================================================================
+Install:
+
+make
+sudo insmod stats_of_random.ko
+
+that's it!
+(assuming /dev/random exists)
+
+===============================================================================
+Cleanup:
+
+sudo rmmod stats_of_random
+
+or make clean to previous remove compilation results
