@@ -87,7 +87,7 @@ ssize_t all_readers_proc(struct file *filp, char *user_buf, size_t count, loff_t
 		goto out;
 	
 	if (!eof) {
-		length = snprintf(buf, 100, "%lu\n", all_bytes);
+		length = snprintf(buf, 100, "Currently reading: %lu\n", reader_count);
 		if (count >= length) {
 			count = length;
 		}
@@ -157,6 +157,7 @@ ssize_t random_read(struct file *file, char __user *buf, size_t nbytes, loff_t *
 	
 	if(bytes_read < 1) {
 		reader_count--;
+		existing->finished = 1;
 		// no deletion, keep record
 	}
 	
