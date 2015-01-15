@@ -1,8 +1,10 @@
 An interface for accesing more statistics about the /dev/random device
 for Linux Kernel >= 2.6
+
+Improved /dev/random statistics module (stats_of_random)
 ========
 
-The project includes a kernel module (stats_of_random) to gather additional 
+The project includes a kernel module to gather additional 
 information about the device by substituting existing random device
 kernel functions and proc entries to access this stored information.
 
