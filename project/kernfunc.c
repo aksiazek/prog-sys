@@ -43,7 +43,6 @@ int kernfunc_init(void) {
 
 void *malloc(unsigned long size) {
 	void *(*run)(unsigned long) = sym_module_alloc.run;
-	printk(KERN_INFO "in malloc!\n");
 	return run(size);
 }
 
